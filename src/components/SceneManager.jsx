@@ -1,25 +1,26 @@
-import { useEffect, useRef } from 'react'
-import { Canvas } from '@react-three/fiber'
-import { SceneProvider, useScene } from '../context/SceneContext'
-import { HeroScene } from './HeroScene'
+import { useEffect } from "react";
+import { Canvas } from "@react-three/fiber";
+import { SceneProvider, useScene } from "../context/SceneContext";
+import { HeroScene } from "./HeroScene";
+import { JourneyScene } from "./JourneyScene";
 
 // Scroll tracker — updates scrollProgress ref without causing re-renders
 function ScrollTracker() {
-  const { scrollProgress } = useScene()
+  const { scrollProgress } = useScene();
 
   useEffect(() => {
     const handleScroll = () => {
       // Normalize scroll: 0 at top, 1 at 100vh scrolled
-      const maxScroll = window.innerHeight
-      const current = Math.min(window.scrollY / maxScroll, 1)
-      scrollProgress.current = current
-    }
+      const maxScroll = window.innerHeight;
+      const current = window.scrollY / maxScroll;
+      scrollProgress.current = current;
+    };
 
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [scrollProgress])
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [scrollProgress]);
 
-  return null
+  return null;
 }
 
 function CanvasContent() {
@@ -28,9 +29,9 @@ function CanvasContent() {
       <ScrollTracker />
       {/* HeroScene renders inside the global canvas */}
       <HeroScene />
-      {/* Future: <MissionScene />, <CrewScene />, etc. */}
+      <JourneyScene />
     </>
-  )
+  );
 }
 
 export function SceneManager() {
@@ -39,11 +40,11 @@ export function SceneManager() {
       {/* Fixed canvas — stays in place while DOM sections scroll over it */}
       <div
         style={{
-          position: 'fixed',
+          position: "fixed",
           top: 0,
           left: 0,
-          width: '100vw',
-          height: '100vh',
+          width: "100vw",
+          height: "100vh",
           zIndex: 0,
         }}
       >
@@ -53,17 +54,23 @@ export function SceneManager() {
           gl={{
             antialias: true,
             alpha: false,
-            powerPreference: 'high-performance',
+            powerPreference: "high-performance",
           }}
-          style={{ background: '#000308' }}
+          style={{ background: "#000308" }}
         >
           <CanvasContent />
         </Canvas>
       </div>
 
       {/* Scroll spacer — creates scroll distance for GSAP/scroll reactions */}
-      {/* Each section adds height here, DOM overlays use position:sticky */}
-      <div style={{ height: '300vh', position: 'relative', zIndex: 1, pointerEvents: 'none' }} />
+      <div
+        style={{
+          height: "600vh",
+          position: "relative",
+          zIndex: 1,
+          pointerEvents: "none",
+        }}
+      />
     </SceneProvider>
-  )
+  );
 }
