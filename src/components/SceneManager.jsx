@@ -9,9 +9,8 @@ function ScrollTracker() {
 
   useEffect(() => {
     const handleScroll = () => {
-      // Normalize scroll: 0 at top, 1 at 100vh scrolled
-      const maxScroll = window.innerHeight
-      const current = Math.min(window.scrollY / maxScroll, 1)
+      // No cap — grows as user scrolls: 0, 1, 2, 3... one per section
+      const current = window.scrollY / window.innerHeight
       scrollProgress.current = current
     }
 
@@ -63,7 +62,18 @@ export function SceneManager() {
 
       {/* Scroll spacer — creates scroll distance for GSAP/scroll reactions */}
       {/* Each section adds height here, DOM overlays use position:sticky */}
-      <div style={{ height: '300vh', position: 'relative', zIndex: 1, pointerEvents: 'none' }} />
+      {/*
+  SCROLL SPACER — increase this number to add more scroll room.
+  Each section = 150vh.
+  Section 1 Hero:            scrollProgress 0 → 1
+  Section 2 Mission:         scrollProgress 1 → 2
+  Section 3 Crew:            scrollProgress 2 → 3
+  Section 4 Journey:         scrollProgress 3 → 4
+  Section 5 Moon Encounter:  scrollProgress 4 → 5
+  Section 6 Return to Earth: scrollProgress 5 → 6
+  Section 7 Footer:          scrollProgress 6 → end
+*/}
+      <div style={{ height: '600vh', position: 'relative', zIndex: 1, pointerEvents: 'none' }} />
     </SceneProvider>
   )
 }
