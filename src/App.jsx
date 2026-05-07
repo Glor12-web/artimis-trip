@@ -1,6 +1,7 @@
 import { SceneManager } from './components/SceneManager'
 import { HeroOverlay } from './components/HeroOverlay'
 import { JourneyOverlay } from './components/JourneyOverlay'
+import { FuturisticFooter } from './components/FuturisticFooter'
 import './index.css'
 
 export default function App() {
@@ -15,6 +16,7 @@ export default function App() {
       {/* Future sections mount here as DOM overlays */}
       {/* <MissionSection /> */}
       {/* <CrewSection /> */}
+      <FuturisticFooter />
     </div>
   )
 }
