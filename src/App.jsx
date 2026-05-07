@@ -1,6 +1,7 @@
 import { SceneManager } from './components/SceneManager'
 import { HeroOverlay } from './components/HeroOverlay'
 import { MissionOverlay } from './components/MissionOverlay'
+import { ReturnToEarth} from './components/ReturnToEarth'
 import './index.css'
 
 /*
@@ -27,6 +28,7 @@ export default function App() {
       {/* Sections — scroll over the canvas in this order */}
       <HeroOverlay />     {/* scrollProgress 0 → 1 */}
       <MissionOverlay />  {/* scrollProgress 1 → 2 */}
+      <ReturnToEarth />  {/* scrollProgress 1 → 2 */}
       {/* Next teammate adds their section here */}
 
     </div>
