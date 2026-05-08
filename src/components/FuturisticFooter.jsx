@@ -32,10 +32,10 @@ export function FuturisticFooter() {
                 className="w-full pt-16 pb-16 px-8 relative"
                 style={{
                     // Creates an arch: 50% width horizontal radius, 100px vertical radius
-                    borderRadius: '50% 50% 0 0 / 120px 120px 0 0',
+                    borderRadius: '50% 50% 0 0 / 40px 40px 0 0',
                     background: '#000000',
                     borderTop: '2px solid rgba(79, 195, 247, 0.3)',
-                    marginTop: '-60px' // Slightly pull up over the scene
+                    marginTop: '-60px'
                 }}
             >
                 <div
