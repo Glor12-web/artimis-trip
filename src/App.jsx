@@ -1,7 +1,7 @@
 import { SceneManager } from './components/SceneManager'
 import { HeroOverlay } from './components/HeroOverlay'
 import { MissionOverlay } from './components/MissionOverlay'
-import { MoonEncounter } from './components/MoonEncounter'
+import { CrewOverlay } from "./components/CrewOverlay"
 import './index.css'
 
 /*
@@ -20,17 +20,16 @@ import './index.css'
 
 export default function App() {
   return (
-    <div className="relative w-full" style={{ background: '#000308' }}>
-
+    <div className="relative w-full" style={{ background: "#000308" }}>
       {/* Canvas — fixed, never unmounts, runs the whole time */}
       <SceneManager />
-
       {/* Sections — scroll over the canvas in this order */}
       <HeroOverlay />     {/* scrollProgress 0 → 1 */}
       <MissionOverlay />  {/* scrollProgress 1 → 2 */}
-      <MoonEncounter />    {/* scrollProgress 2 → 3 */}
+      <CrewOverlay/>
       {/* Next teammate adds their section here */}
-
     </div>
-  )
+  );
 }
+
+jsx
