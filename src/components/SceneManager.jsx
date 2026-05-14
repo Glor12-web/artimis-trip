@@ -67,13 +67,10 @@ export function SceneManager() {
   Each section = 150vh.
   Section 1 Hero:            scrollProgress 0 → 1
   Section 2 Mission:         scrollProgress 1 → 2
-  Section 3 Crew:            scrollProgress 2 → 3
-  Section 4 Journey:         scrollProgress 3 → 4
-  Section 5 Moon Encounter:  scrollProgress 4 → 5
-  Section 6 Return to Earth: scrollProgress 5 → 6
-  Section 7 Footer:          scrollProgress 6 → end
+  Section 3 Moon Encounter:  scrollProgress 2 → 3
+  Section 4 Return to Earth: scrollProgress 3 → 4
 */}
-      <div style={{ height: '600vh', position: 'relative', zIndex: 1, pointerEvents: 'none' }} />
+      <div style={{ height: '1050vh', position: 'relative', zIndex: 1, pointerEvents: 'none' }} />
     </SceneProvider>
   )
 }
