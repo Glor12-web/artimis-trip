@@ -1,6 +1,7 @@
 import { SceneManager } from "./components/SceneManager";
 import { HeroOverlay } from "./components/HeroOverlay";
 import { JourneyOverlay } from "./components/JourneyOverlay";
+import { FuturisticFooter } from './components/FuturisticFooter'
 import "./index.css";
 import { SceneManager } from "./components/SceneManager";
 import { HeroOverlay } from "./components/HeroOverlay";
@@ -30,11 +31,13 @@ export default function App() {
       {/* Canvas — fixed, never unmounts, runs the whole time */}
       <SceneManager />
       <HeroOverlay />
+      <MissionSection />
       <CrewOverlay />
       <JourneyOverlay />
       <MoonEncounter />
       <ReturnToEarth />
-      
+      <CrewSection />
+      <FuturisticFooter />
     </div>
   );
 }
