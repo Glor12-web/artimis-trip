@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { SceneProvider, useScene } from '../context/SceneContext'
 import { HeroScene } from './HeroScene'
+import { CrewScene } from './CrewScene'
 
 // Scroll tracker — updates scrollProgress ref without causing re-renders
 function ScrollTracker() {
@@ -28,6 +29,8 @@ function CanvasContent() {
       {/* HeroScene renders inside the global canvas */}
       <HeroScene />
       {/* Future: <MissionScene />, <CrewScene />, etc. */}
+      <CrewScene />
+      {/* Future: <MissionScene />, <JourneyScene />, etc. */}
     </>
   )
 }

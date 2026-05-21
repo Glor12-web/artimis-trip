@@ -3,7 +3,7 @@ import { HeroOverlay } from "./components/HeroOverlay";
 import { MissionOverlay } from "./components/MissionOverlay";
 import { MoonEncounter } from "./components/MoonEncounter";
 import { ReturnToEarth } from "./components/RetunToEarth";
-
+import { CrewOverlay } from "./components/CrewOverlay";
 import "./index.css";
 
 /*
@@ -28,6 +28,7 @@ export default function App() {
       {/* Sections — scroll over the canvas in this order */}
       <HeroOverlay /> {/* scrollProgress 0 → 1 */}
       <MissionOverlay /> {/* scrollProgress 1 → 2 */}
+      <CrewOverlay />
       <MoonEncounter /> {/* scrollProgress 2 → 3 */}
       <ReturnToEarth /> {/* scrollProgress 3 → 4 */}
     </div>
