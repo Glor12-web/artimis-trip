@@ -5,8 +5,6 @@ import { MoonEncounter } from "./components/MoonEncounter";
 import { ReturnToEarth } from "./components/RetunToEarth";
 
 import "./index.css";
-import { JourneyOverlay } from "./components/JourneyOverlay";
-import { FuturisticFooter } from "./components/Footer";
 
 /*
   HOW TO ADD A NEW SECTION 
@@ -30,10 +28,8 @@ export default function App() {
       {/* Sections — scroll over the canvas in this order */}
       <HeroOverlay /> {/* scrollProgress 0 → 1 */}
       <MissionOverlay /> {/* scrollProgress 1 → 2 */}
-      <JourneyOverlay />
       <MoonEncounter /> {/* scrollProgress 2 → 3 */}
       <ReturnToEarth /> {/* scrollProgress 3 → 4 */}
-      <FuturisticFooter />
     </div>
   );
 }
