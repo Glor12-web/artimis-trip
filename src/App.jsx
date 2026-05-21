@@ -1,10 +1,12 @@
-import { SceneManager } from './components/SceneManager'
-import { HeroOverlay } from './components/HeroOverlay'
-import { MissionOverlay } from './components/MissionOverlay'
-import { MoonEncounter } from './components/MoonEncounter'
-import { ReturnToEarth } from './components/RetunToEarth'
+import { SceneManager } from "./components/SceneManager";
+import { HeroOverlay } from "./components/HeroOverlay";
+import { MissionOverlay } from "./components/MissionOverlay";
+import { MoonEncounter } from "./components/MoonEncounter";
+import { ReturnToEarth } from "./components/RetunToEarth";
 
-import './index.css'
+import "./index.css";
+import { JourneyOverlay } from "./components/JourneyOverlay";
+import { FuturisticFooter } from "./components/Footer";
 
 /*
   HOW TO ADD A NEW SECTION 
@@ -22,17 +24,16 @@ import './index.css'
 
 export default function App() {
   return (
-    <div className="relative w-full" style={{ background: '#000308' }}>
-
+    <div className="relative w-full" style={{ background: "#000308" }}>
       {/* Canvas — fixed, never unmounts, runs the whole time */}
       <SceneManager />
-
       {/* Sections — scroll over the canvas in this order */}
-      <HeroOverlay />     {/* scrollProgress 0 → 1 */}
-      <MissionOverlay />  {/* scrollProgress 1 → 2 */}
-      <MoonEncounter />    {/* scrollProgress 2 → 3 */}
-      <ReturnToEarth />   {/* scrollProgress 3 → 4 */}
-
+      <HeroOverlay /> {/* scrollProgress 0 → 1 */}
+      <MissionOverlay /> {/* scrollProgress 1 → 2 */}
+      <JourneyOverlay />
+      <MoonEncounter /> {/* scrollProgress 2 → 3 */}
+      <ReturnToEarth /> {/* scrollProgress 3 → 4 */}
+      <FuturisticFooter />
     </div>
-  )
+  );
 }
