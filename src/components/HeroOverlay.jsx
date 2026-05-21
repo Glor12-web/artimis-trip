@@ -56,19 +56,23 @@ export function HeroOverlay() {
 
       // === SCROLL EXIT ===
       // Entire overlay fades + lifts as user scrolls
-      ScrollTrigger.create({
-        trigger: document.body,
-        start: 'top top',
-        end: '40% top',
-        scrub: 1.2,
-        onUpdate: (self) => {
-          const t = self.progress
-          if (overlayRef.current) {
-            overlayRef.current.style.opacity   = 1 - t * 1.5
-            overlayRef.current.style.transform = `translateY(${-t * 60}px)`
-          }
-        },
-      })
+    ScrollTrigger.create({
+  trigger: document.body,
+  start: 'top top',
+  end: '40% top',
+  scrub: 1.2,
+  onUpdate: (self) => {
+    const t = self.progress
+    if (overlayRef.current) {
+      const opacity = Math.max(0, 1 - t * 1.5)
+      overlayRef.current.style.opacity = opacity
+      overlayRef.current.style.transform = `translateY(${-t * 60}px)`
+      // Once fully invisible, pull it out of the stacking context
+      overlayRef.current.style.pointerEvents = opacity === 0 ? 'none' : 'none'
+      overlayRef.current.style.visibility = opacity <= 0 ? 'hidden' : 'visible'
+    }
+  },
+})
 
     })
 

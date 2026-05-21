@@ -1,5 +1,9 @@
 import { SceneManager } from "./components/SceneManager";
 import { HeroOverlay } from "./components/HeroOverlay";
+import { JourneyOverlay } from "./components/JourneyOverlay";
+import "./index.css";
+import { SceneManager } from "./components/SceneManager";
+import { HeroOverlay } from "./components/HeroOverlay";
 import { MissionOverlay } from "./components/MissionOverlay";
 import { MoonEncounter } from "./components/MoonEncounter";
 import { ReturnToEarth } from "./components/RetunToEarth";
@@ -25,12 +29,12 @@ export default function App() {
     <div className="relative w-full" style={{ background: "#000308" }}>
       {/* Canvas — fixed, never unmounts, runs the whole time */}
       <SceneManager />
-      {/* Sections — scroll over the canvas in this order */}
-      <HeroOverlay /> {/* scrollProgress 0 → 1 */}
-      <MissionOverlay /> {/* scrollProgress 1 → 2 */}
+      <HeroOverlay />
       <CrewOverlay />
-      <MoonEncounter /> {/* scrollProgress 2 → 3 */}
-      <ReturnToEarth /> {/* scrollProgress 3 → 4 */}
+      <JourneyOverlay />
+      <MoonEncounter />
+      <ReturnToEarth />
+      
     </div>
   );
 }
