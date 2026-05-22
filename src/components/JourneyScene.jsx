@@ -6,6 +6,9 @@ import { useScene } from '../context/SceneContext';
 const MOON_TEXTURE_URL = 'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/moon_1024.jpg';
 
 function Rocket() {
+  const { scrollProgress } = useScene();
+  const flameRef = useRef();
+  
   const rocketTex = useMemo(() => {
     const canvas = document.createElement('canvas');
     canvas.width = 128; canvas.height = 128;
@@ -28,6 +31,14 @@ function Rocket() {
     return tex;
   }, []);
 
+  useFrame((state) => {
+    if (flameRef.current) {
+      const t = state.clock.getElapsedTime();
+      const s = 1 + Math.sin(t * 30) * 0.1;
+      flameRef.current.scale.set(s, 1.5 + Math.sin(t * 20) * 0.5, s);
+    }
+  });
+
   return (
     <group>
       <mesh position={[0, 2.5, 0]}>
@@ -46,6 +57,15 @@ function Rocket() {
         <cylinderGeometry args={[0.2, 0.2, 4, 16]} />
         <meshStandardMaterial color="#aaaaaa" metalness={0.8} roughness={0.2} />
       </mesh>
+      
+      {/* Exhaust Flame */}
+      <group position={[0, 0, 0]} ref={flameRef}>
+        <mesh position={[0, -1, 0]}>
+          <coneGeometry args={[0.4, 3, 16]} />
+          <meshBasicMaterial color="#ffaa00" transparent opacity={0.8} />
+        </mesh>
+        <pointLight position={[0, -1, 0]} color="#ffaa00" intensity={10} distance={15} />
+      </group>
     </group>
   );
 }
@@ -117,12 +137,11 @@ function TexturedMoon() {
 }
 
 export function JourneyScene() {
-  const { earthRef, scrollProgress } = useScene();
+  const { earthRef, moonRef, scrollProgress } = useScene();
   const { camera } = useThree();
 
   const slsGroup = useRef();
   const orionGroup = useRef();
-  const moonRef = useRef();
   const heatShieldRef = useRef();
 
   const baseCameraZ = 3.5;
@@ -131,14 +150,14 @@ export function JourneyScene() {
   // The seamless trajectory path
   const trajectoryCurve = useMemo(() => {
     return new THREE.CatmullRomCurve3([
-      new THREE.Vector3(0, 1.5, 0),       // 0: Transition from SLS seamlessly
-      new THREE.Vector3(2.5, 0.5, -2),    // 1: Fly towards moon right
-      new THREE.Vector3(5, 0, -6),        // 2: Beside Moon Right (wider turn)
+      new THREE.Vector3(0, 1.5, 2),       // 0: Transition from SLS (pushed towards camera)
+      new THREE.Vector3(3, 0.5, 0),       // 1: Fly towards moon right
+      new THREE.Vector3(5, 0, -6),        // 2: Beside Moon Right
       new THREE.Vector3(0, 0, -10),       // 3: Behind Moon
-      new THREE.Vector3(-5, 0, -6),       // 4: Beside Moon Left (wider turn)
-      new THREE.Vector3(0, 0, -2.5),      // 5: Crossing FRONT of Moon! (Visible)
-      new THREE.Vector3(-2.5, -0.5, -1),  // 6: Returning to Earth
-      new THREE.Vector3(0, -2, 0),        // 7: Reentry Splashdown
+      new THREE.Vector3(-5, 0, -6),       // 4: Beside Moon Left
+      new THREE.Vector3(0, 0, -2.5),      // 5: Crossing FRONT of Moon
+      new THREE.Vector3(-3, -0.5, 0),     // 6: Returning to Earth
+      new THREE.Vector3(0, -2, 2),        // 7: Reentry Splashdown (pushed towards camera)
     ], false, 'catmullrom', 0.5);
   }, []);
 
@@ -185,46 +204,60 @@ export function JourneyScene() {
     let targetMoonY = 0;
     let targetMoonZ = -6;
 
-    // Phase 1 (Launch & Outbound): 6.3 -> 8.0
-    if (raw > 6.3 && raw <= 8.0) {
-      const t = (raw - 6.3) / 1.7; // 0 -> 1
+    // Phase 1 (Launch & Outbound): 6.3 -> 8.5
+    if (raw > 6.3 && raw <= 8.5) {
+      const t = (raw - 6.3) / 2.2; // 0 -> 1
       
       earthRef.current.visible = true;
-      // Stylish fade in: scale from 0 to 1 and rise from below
-      targetEarthScale = t;
-      targetEarthY = -2 + (t * 0.5); // Rises to -1.5
-
-      if (t < 0.4) {
-        slsVisible = true;
-        orionVisible = false;
-        // SLS emerges from the top of the Earth (Y=2 relative to Earth)
-        targetSlsY = targetEarthY + (t * 10); 
-        targetSlsScale = 0.2;
+      
+      if (raw <= 6.8) {
+        // Still in MainScene's handover period, but we prepare values
+        targetEarthScale = 0.6 + ((raw - 6.3) / 0.5) * 0.6;
+        targetEarthY = -1.5 + ((raw - 6.3) / 0.5) * 0.3;
+        targetEarthX = 1.7 * (1 - (raw - 6.3) / 0.5);
       } else {
-        slsVisible = false;
-        orionVisible = true;
+        // Full control after 6.8
+        const p = (raw - 6.8) / 1.7; // 0 -> 1
+        targetEarthScale = 1.2 * (1 - p * 0.5); // Earth starts large and shrinks as we leave
+        targetEarthY = -1.2 - p * 2; // Earth drops away
+        targetEarthX = 0;
         
-        // Start curve earlier to complete loop by 9
-        const curve_t = (t - 0.4) / 0.6 * 0.4; 
-        const targetPos = trajectoryCurve.getPoint(curve_t);
-        const tangent = trajectoryCurve.getTangent(curve_t);
+        if (p < 0.3) {
+          slsVisible = true;
+          orionVisible = false;
+          // SLS starts from the surface (Earth radius 2, Earth Y -1.2 => surface Y 0.8)
+          // It blasts off towards the camera (Z increases)
+          const launchP = p / 0.3;
+          targetSlsY = 0.8 + launchP * 4;
+          targetSlsScale = 0.2;
+          // SLS also moves slightly towards camera
+          slsGroup.current.position.z = launchP * 2;
+        } else {
+          slsVisible = false;
+          orionVisible = true;
+          
+          // Smoothly transition Orion onto the curve
+          const curve_t = (p - 0.3) / 0.7 * 0.4; 
+          const targetPos = trajectoryCurve.getPoint(curve_t);
+          const tangent = trajectoryCurve.getTangent(curve_t);
 
-        targetOrionX = targetPos.x;
-        targetOrionY = targetPos.y;
-        targetOrionZ = targetPos.z;
-        targetOrionLookTarget = targetPos.clone().add(tangent);
+          targetOrionX = targetPos.x;
+          targetOrionY = targetPos.y;
+          targetOrionZ = targetPos.z;
+          targetOrionLookTarget = targetPos.clone().add(tangent);
+        }
       }
 
-      targetMoonScale = t * 1.2;
+      targetMoonScale = t * 1.5;
     }
-    // Phase 2 (Moon Loop): 8.0 -> 9.8
-    else if (raw > 8.0 && raw <= 9.8) {
-      const t = (raw - 8.0) / 1.8; // 0 -> 1
+    // Phase 2 (Moon Loop): 8.5 -> 10.5
+    else if (raw > 8.5 && raw <= 10.5) {
+      const t = (raw - 8.5) / 2.0; // 0 -> 1
       const curve_t = 0.4 + (t * 0.6); // 0.4 -> 1.0 (Completes return)
 
       slsVisible = false;
       orionVisible = true;
-      targetMoonScale = 1.2 * (1 - t * 0.5);
+      targetMoonScale = 1.5 * (1 - t * 0.4);
 
       const targetPos = trajectoryCurve.getPoint(curve_t);
       const tangent = trajectoryCurve.getTangent(curve_t);
@@ -243,9 +276,9 @@ export function JourneyScene() {
       targetEarthScale = 1.0;
       targetEarthY = -1.5 + (t * 0.5); // Center Earth more
     }
-    // Phase 3 (Post-Journey / Static Earth): 9.8 -> 14.8
-    else if (raw > 9.8) {
-      const t = Math.min((raw - 9.8) / 5, 1); // 0 -> 1
+    // Phase 3 (Post-Journey / Static Earth): 10.5 -> 15.0
+    else if (raw > 10.5) {
+      const t = Math.min((raw - 10.5) / 4.5, 1); // 0 -> 1
       
       slsVisible = false;
       orionVisible = false; // Hide Orion after journey loop is done
@@ -295,15 +328,13 @@ export function JourneyScene() {
       moonRef.current.position.set(targetMoonX, targetMoonY, targetMoonZ);
     }
 
+    const currentEarthScale = earthRef.current.scale.x;
+    const nextEarthScale = currentEarthScale + (targetEarthScale - currentEarthScale) * 0.04;
+    earthRef.current.scale.setScalar(nextEarthScale);
+    
     earthRef.current.position.x += (targetEarthX - earthRef.current.position.x) * 0.04;
     earthRef.current.position.y += (targetEarthY - earthRef.current.position.y) * 0.04;
     earthRef.current.position.z += (targetEarthZ - earthRef.current.position.z) * 0.04;
-    earthRef.current.scale.setScalar(targetEarthScale);
-
-    camera.position.x += (targetCamX - camera.position.x) * 0.04;
-    camera.position.y += (targetCamY - camera.position.y) * 0.04;
-    camera.position.z += (targetCamZ - camera.position.z) * 0.04;
-    camera.rotation.x += (targetCamRotX - camera.rotation.x) * 0.04;
   });
 
   return (
@@ -312,7 +343,6 @@ export function JourneyScene() {
       <group ref={slsGroup} visible={false}>
         <Suspense fallback={null}>
           <Rocket />
-          <pointLight position={[0, -2, 0]} color="#ffaa00" intensity={5} distance={10} />
         </Suspense>
       </group>
 
@@ -336,14 +366,6 @@ export function JourneyScene() {
           </Suspense>
         </group>
       </group>
-
-      {/* Stand-in Moon */}
-      <mesh ref={moonRef} visible={false}>
-        <sphereGeometry args={[1, 64, 64]} />
-        <Suspense fallback={<meshStandardMaterial color="#cccccc" roughness={0.8} />}>
-          <TexturedMoon />
-        </Suspense>
-      </mesh>
     </group>
   );
 }

@@ -5,11 +5,13 @@ const SceneContext = createContext(null)
 export function SceneProvider({ children }) {
   // Shared refs — available to any scene section
   const earthRef = useRef(null)
+  const moonRef = useRef(null)
   const cameraRef = useRef(null)
   const scrollProgress = useRef(0) // 0 → 1 as user scrolls
 
   const value = {
     earthRef,
+    moonRef,
     cameraRef,
     scrollProgress,
   }

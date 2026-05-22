@@ -40,22 +40,27 @@ function CameraController() {
     // Section 4: Journey Timeline (t = 6.3 → 9.8) — pulls back to show journey
     else if (t <= 9.8) {
       const p = (t - 6.3) / 3.5;
-      camera.position.z += (2.5 + (5 - 2.5) * p - camera.position.z) * 0.05;
+      // Start closer for launch to create that "close" feeling, then pull back
+      const targetZ = p < 0.15 ? 2.8 : 2.8 + (6 - 2.8) * ((p - 0.15) / 0.85);
+      camera.position.z += (targetZ - camera.position.z) * 0.05;
+      camera.position.y += (0.8 + p * 0.3 - camera.position.y) * 0.05;
+      camera.position.x += (0 - camera.position.x) * 0.05;
+    }
+
+    // Section 5: Moon Encounter (t = 9.8 → 11.5) — shifts toward Moon
+    else if (t <= 11.5) {
+      const p = (t - 9.8) / 1.7;
+      camera.position.z += (6 + (5 - 6) * p - camera.position.z) * 0.05;
+      camera.position.x += (p * 2.5 - camera.position.x) * 0.05;
       camera.position.y += (1.1 - camera.position.y) * 0.05;
     }
 
-    // Section 5: Moon Encounter (t = 9.8 → 10.8) — shifts toward Moon
-    else if (t <= 10.8) {
-      const p = t - 9.8;
-      camera.position.z += (5 - camera.position.z) * 0.05;
-      camera.position.x += (p * 2 - camera.position.x) * 0.05;
-    }
-
-    // Section 6: Return to Earth (t = 10.8 → 14.8) — drifts back
-    else if (t <= 14.8) {
-      const p = (t - 10.8) / 4;
-      camera.position.x += ((1 - p) * 2 - camera.position.x) * 0.05;
+    // Section 6: Return to Earth (t = 11.5 → 15.5) — drifts back
+    else if (t <= 15.5) {
+      const p = (t - 11.5) / 4;
+      camera.position.x += ((2.5 - p * 2.5) - camera.position.x) * 0.05;
       camera.position.z += (5 + (4 - 5) * p - camera.position.z) * 0.05;
+      camera.position.y += (1.1 - 0.3 * p - camera.position.y) * 0.05;
     }
 
     camera.lookAt(0, 0, 0);
@@ -77,26 +82,46 @@ function TexturedMoonMaterial() {
 
 // Moon — small, distant, subtle
 function Moon() {
-  const moonRef = useRef();
-  const { scrollProgress } = useScene();
+  const { scrollProgress, moonRef } = useScene();
 
   useFrame(({ clock }) => {
     if (!moonRef.current) return;
     const t = clock.getElapsedTime();
     const raw = scrollProgress.current;
 
-    // Hide moon during Journey phase (>6)
-    moonRef.current.visible = raw <= 6;
+    // Visibility: Always visible after it appears in Hero
+    moonRef.current.visible = true;
 
-    moonRef.current.position.x = Math.cos(t * 0.08) * 5;
-    moonRef.current.position.z = Math.sin(t * 0.08) * 3 - 1;
-    moonRef.current.position.y = Math.sin(t * 0.04) * 0.5;
+    if (raw < 4) {
+      moonRef.current.position.x = Math.cos(t * 0.08) * 5;
+      moonRef.current.position.z = Math.sin(t * 0.08) * 3 - 1;
+      moonRef.current.position.y = Math.sin(t * 0.04) * 0.5;
+      moonRef.current.scale.setScalar(0.35);
+    } else if (raw < 6.8) {
+      // Transition Moon to its Journey position (0, 0, -6)
+      const p = Math.min((raw - 4) / 2.8, 1);
+      const targetX = 0;
+      const targetY = 0;
+      const targetZ = -6;
+      const targetScale = 1.0;
+      
+      const currentOrbitX = Math.cos(t * 0.08) * 5;
+      const currentOrbitZ = Math.sin(t * 0.08) * 3 - 1;
+      const currentOrbitY = Math.sin(t * 0.04) * 0.5;
+
+      moonRef.current.position.x = currentOrbitX + (targetX - currentOrbitX) * p;
+      moonRef.current.position.y = currentOrbitY + (targetY - currentOrbitY) * p;
+      moonRef.current.position.z = currentOrbitZ + (targetZ - currentOrbitZ) * p;
+      moonRef.current.scale.setScalar(0.35 + (targetScale - 0.35) * p);
+    }
+    // After 6.8, JourneyScene takes over position/scale via the same ref
+    
     moonRef.current.rotation.y += 0.002;
   });
 
   return (
     <mesh ref={moonRef}>
-      <sphereGeometry args={[0.35, 32, 32]} />
+      <sphereGeometry args={[1, 64, 64]} />
       <Suspense
         fallback={<meshStandardMaterial color="#c8bfa0" roughness={0.9} />}
       >
@@ -107,8 +132,7 @@ function Moon() {
 }
 
 export function MainScene() {
-  const { earthRef, scrollProgress } = useScene();
-  const moonRef = useRef();
+  const { earthRef, moonRef, scrollProgress } = useScene();
 
   useFrame((state, delta) => {
     const t = scrollProgress.current;
@@ -134,34 +158,15 @@ export function MainScene() {
       earthRef.current.position.x = 0.2 + p * 1.5;   
     }
     else if (t > 2.6 && t <= 6.3) {
+      // Crew section: Earth in the corner
       earthRef.current.visible = true;
+      earthRef.current.scale.setScalar(0.6);
+      earthRef.current.position.y = -1.5;
+      earthRef.current.position.x = 1.7;
     }
     else {
       // JourneyScene takes over visibility and positioning after t=6.3
     }
-    
-    // Moon visibility logic
-    if (moonRef.current) {
-      if (t <= 6.3) {
-        moonRef.current.visible = true;
-        if (t > 1 && t <= 2.6) {
-          const p = (t - 1) / 1.6;
-          moonRef.current.scale.setScalar(1 - p * 0.5);
-        }
-      } else {
-        moonRef.current.visible = false;
-      }
-    }
-  });
-
-  useFrame(({ clock }) => {
-    if (!moonRef.current) return;
-    const t = clock.getElapsedTime();
-    
-    moonRef.current.position.x = Math.cos(t * 0.08) * 5;
-    moonRef.current.position.z = Math.sin(t * 0.08) * 3 - 1;
-    moonRef.current.position.y = Math.sin(t * 0.04) * 0.5;
-    moonRef.current.rotation.y += 0.002;
   });
 
   return (
@@ -203,14 +208,7 @@ export function MainScene() {
       </Suspense>
 
       {/* Moon — orbiting in background */}
-      <mesh ref={moonRef}>
-        <sphereGeometry args={[0.35, 32, 32]} />
-        <Suspense
-          fallback={<meshStandardMaterial color="#c8bfa0" roughness={0.9} />}
-        >
-          <TexturedMoonMaterial />
-        </Suspense>
-      </mesh>
+      <Moon />
     </>
   );
 }

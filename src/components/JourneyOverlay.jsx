@@ -95,8 +95,8 @@ export function JourneyOverlay() {
           style={{
             width: 'min(440px, 40vw)',
             opacity: activePhase > 0 ? 1 : 0,
-            transform: activePhase > 0 ? 'translateX(0)' : 'translateX(-40px)',
-            transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
+            transform: activePhase > 0 ? 'translateY(0)' : 'translateY(20px)',
+            transition: 'opacity 1s ease-out, transform 1s cubic-bezier(0.16, 1, 0.3, 1)',
             background: 'rgba(10, 15, 25, 0.4)',
             backdropFilter: 'blur(20px) saturate(180%)',
             border: '1px solid rgba(255, 255, 255, 0.08)',
