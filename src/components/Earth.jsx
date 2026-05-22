@@ -93,16 +93,9 @@ export function Earth({ useTextures = true }) {
     // Idle rotation
     resolvedRef.current.rotation.y += delta * 0.06
 
-    // Subtle float
+    // Subtle float — only on the Y axis
     floatOffset.current += delta * 0.4
-    const baseY = 0
-    const scrollY = scrollProgress.current * -0.8 // shifts down slightly on scroll
-    resolvedRef.current.position.y =
-      baseY + Math.sin(floatOffset.current) * 0.06 + scrollY
-
-    // Parallax tilt on scroll
-    resolvedRef.current.position.x = scrollProgress.current * 0.5
-    resolvedRef.current.rotation.z = scrollProgress.current * 0.05
+    resolvedRef.current.position.y += Math.sin(floatOffset.current) * 0.0005 // extremely subtle
   })
 
   return (

@@ -94,7 +94,7 @@ export function MoonEncounter() {
   }, [])
 
   return (
-    <div ref={sectionRef} style={{ height: '150vh', position: 'relative', zIndex: 10 }}>
+    <div ref={sectionRef} style={{ height: '100vh', position: 'relative', zIndex: 10 }}>
       <div style={{
         position: 'sticky',
         top: 0,

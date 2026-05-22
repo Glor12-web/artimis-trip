@@ -196,8 +196,8 @@ function CrewMemberSection({ member, index, isFirst }) {
   }, [index, isFirst, member.direction])
 
   return (
-    // Each member owns 100vh of scroll space
-    <div ref={sectionRef} style={{ height: '60vh', position: 'relative', zIndex: 10 }}>
+    // Each member owns 80vh of scroll space to tighten spacing
+    <div ref={sectionRef} style={{ height: '80vh', position: 'relative', zIndex: 10 }}>
       <div style={{
           position: 'sticky',
           top: 0,
@@ -208,6 +208,7 @@ function CrewMemberSection({ member, index, isFirst }) {
           padding: '0 8vw',
           pointerEvents: 'none',
           overflow: 'visible',
+          marginTop: '-4vh', // Shift up slightly
         }}>
 
         {/* Badge + Heading + Divider — only on first member */}

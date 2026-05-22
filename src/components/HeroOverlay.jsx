@@ -56,23 +56,22 @@ export function HeroOverlay() {
 
       // === SCROLL EXIT ===
       // Entire overlay fades + lifts as user scrolls
-    ScrollTrigger.create({
-  trigger: document.body,
-  start: 'top top',
-  end: '40% top',
-  scrub: 1.2,
-  onUpdate: (self) => {
-    const t = self.progress
-    if (overlayRef.current) {
-      const opacity = Math.max(0, 1 - t * 1.5)
-      overlayRef.current.style.opacity = opacity
-      overlayRef.current.style.transform = `translateY(${-t * 60}px)`
-      // Once fully invisible, pull it out of the stacking context
-      overlayRef.current.style.pointerEvents = opacity === 0 ? 'none' : 'none'
-      overlayRef.current.style.visibility = opacity <= 0 ? 'hidden' : 'visible'
-    }
-  },
-})
+      ScrollTrigger.create({
+        trigger: document.body,
+        start: 'top top',
+        end: '100vh top', // Completes exactly at one full screen scroll
+        scrub: true,
+        onUpdate: (self) => {
+          const t = self.progress
+          if (overlayRef.current) {
+            // Sharper fade: becomes 0 opacity at 70% of the way to the next section
+            const opacity = Math.max(0, 1 - t * 1.4)
+            overlayRef.current.style.opacity = opacity
+            overlayRef.current.style.transform = `translateY(${-t * 100}px)`
+            overlayRef.current.style.visibility = opacity <= 0 ? 'hidden' : 'visible'
+          }
+        },
+      })
 
     })
 
@@ -80,24 +79,25 @@ export function HeroOverlay() {
   }, [])
 
   return (
-    // Fixed overlay — always on top of the canvas
-    <div
-      ref={overlayRef}
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100vw',
-        height: '100vh',
-        zIndex: 10,
-        pointerEvents: 'none',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'flex-start',
-        padding: '0 8vw',
-      }}
-    >
+    // Section container — provides 100vh of scroll room
+    <div style={{ height: '100vh', position: 'relative', zIndex: 10 }}>
+      {/* Sticky overlay — Pinned while in view, then scrolls naturally */}
+      <div
+        ref={overlayRef}
+        style={{
+          position: 'sticky',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          pointerEvents: 'none',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'flex-start',
+          padding: '0 8vw',
+        }}
+      >
       {/* Mission Badge */}
       <div
         ref={badgeRef}
@@ -269,6 +269,7 @@ export function HeroOverlay() {
           50% { opacity: 0.5; transform: scale(0.8); }
         }
       `}</style>
+      </div>
     </div>
   )
 }

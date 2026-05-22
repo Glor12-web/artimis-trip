@@ -144,7 +144,9 @@ export function JourneyScene() {
 
   useFrame((state) => {
     const raw = scrollProgress.current;
-    if (raw <= 1) {
+    
+    // Hide everything before the Journey phase starts
+    if (raw <= 6.3) {
       if (slsGroup.current) slsGroup.current.visible = false;
       if (orionGroup.current) orionGroup.current.visible = false;
       if (moonRef.current) moonRef.current.visible = false;
@@ -152,10 +154,6 @@ export function JourneyScene() {
     }
 
     if (!earthRef.current) return;
-
-    if (slsGroup.current) slsGroup.current.visible = true;
-    if (orionGroup.current) orionGroup.current.visible = true;
-    if (moonRef.current) moonRef.current.visible = true;
 
     // Default targets
     let targetEarthScale = 1.0;
@@ -187,96 +185,82 @@ export function JourneyScene() {
     let targetMoonY = 0;
     let targetMoonZ = -6;
 
-    // Phase 1 (Launch): 1 -> 2
-    if (raw > 1 && raw <= 2) {
-      const t = Math.max(0, Math.min((raw - 1), 1)); // 0 -> 1
-      slsVisible = true;
-      orionVisible = false;
-      targetEarthX = 0;
+    // Phase 1 (Launch & Outbound): 6.3 -> 8.0
+    if (raw > 6.3 && raw <= 8.0) {
+      const t = (raw - 6.3) / 1.7; // 0 -> 1
+      
+      earthRef.current.visible = true;
+      // Stylish fade in: scale from 0 to 1 and rise from below
+      targetEarthScale = t;
+      targetEarthY = -2 + (t * 0.5); // Rises to -1.5
 
-      // SLS climbs from -0.5 to exactly 1.5, seamlessly matching Trajectory Point 0!
-      targetSlsY = -0.5 + (t * 2.0);
-      targetSlsScale = 0.2;
+      if (t < 0.4) {
+        slsVisible = true;
+        orionVisible = false;
+        // SLS emerges from the top of the Earth (Y=2 relative to Earth)
+        targetSlsY = targetEarthY + (t * 10); 
+        targetSlsScale = 0.2;
+      } else {
+        slsVisible = false;
+        orionVisible = true;
+        
+        // Start curve earlier to complete loop by 9
+        const curve_t = (t - 0.4) / 0.6 * 0.4; 
+        const targetPos = trajectoryCurve.getPoint(curve_t);
+        const tangent = trajectoryCurve.getTangent(curve_t);
 
-      targetCamY = baseCameraY + (t * 1.5);
-      targetCamRotX = t * 0.2;
-      targetCamZ = baseCameraZ + (t * 1.0); // Slight camera pull back
+        targetOrionX = targetPos.x;
+        targetOrionY = targetPos.y;
+        targetOrionZ = targetPos.z;
+        targetOrionLookTarget = targetPos.clone().add(tangent);
+      }
+
+      targetMoonScale = t * 1.2;
     }
-    // Phase 2 (Lunar Flyby & Moon Crossing): 2 -> 3
-    else if (raw > 2 && raw <= 3) {
-      const t = Math.max(0, Math.min((raw - 2), 1)); // 0 -> 1
-      const curve_t = t * 0.73; // 0.0 -> 0.73 (Flies out, behind moon, and crosses the FRONT)
-
-      slsVisible = false; // SLS is gone, Orion takes over!
-      orionVisible = true;
-
-      targetMoonScale = t * 1.5;
-
-      const targetPos = trajectoryCurve.getPoint(curve_t);
-      const tangent = trajectoryCurve.getTangent(curve_t);
-
-      targetOrionX = targetPos.x;
-      targetOrionY = targetPos.y;
-      targetOrionZ = targetPos.z;
-      targetOrionLookTarget = targetPos.clone().add(tangent);
-
-      targetEarthScale = 1.0;
-      targetEarthX = 0;
-      targetEarthZ = 0;
-      targetEarthY = -1.5 - (t * 0.2); // Drift down slightly
-
-      targetCamZ = baseCameraZ + 1.0 + (t * 2); // Camera pulls back safely
-    }
-    // Phase 3 (Return to Earth): 3 -> 4
-    else if (raw > 3) {
-      const t = Math.max(0, Math.min((raw - 3), 1)); // 0 -> 1
-
-      // Accelerate the timeline slightly so splashdown finishes before the absolute end of the scroll
-      const fast_t = Math.min(t * 1.25, 1.0); // Completes at 80% scroll
-
-      const curve_t = 0.73 + (fast_t * 0.27); // 0.73 -> 1.0 (Returns to Earth)
+    // Phase 2 (Moon Loop): 8.0 -> 9.8
+    else if (raw > 8.0 && raw <= 9.8) {
+      const t = (raw - 8.0) / 1.8; // 0 -> 1
+      const curve_t = 0.4 + (t * 0.6); // 0.4 -> 1.0 (Completes return)
 
       slsVisible = false;
       orionVisible = true;
+      targetMoonScale = 1.2 * (1 - t * 0.5);
 
-      // Stop zooming the moon: gradually shrink it away as we leave lunar orbit
-      targetMoonScale = 1.5 - (fast_t * 1.5);
-
-      // Smooth descent curve translation
       const targetPos = trajectoryCurve.getPoint(curve_t);
       const tangent = trajectoryCurve.getTangent(curve_t);
 
       targetOrionX = targetPos.x;
       targetOrionY = targetPos.y;
       targetOrionZ = targetPos.z;
-
-      // Force Orion to physically dip into the Earth/Ocean at the very end of its fast_t cycle
-      if (fast_t > 0.9) {
-        targetOrionY -= (fast_t - 0.9) * 8;
-      }
-
-      if (fast_t > 0.5) {
-        // Spin around 180 degrees to point the heat shield towards Earth atmosphere
+      
+      if (curve_t > 0.8) {
+        // Prepare for return: look towards Earth
         targetOrionLookTarget = targetPos.clone().sub(tangent);
       } else {
         targetOrionLookTarget = targetPos.clone().add(tangent);
       }
 
-      // Heat shield glow intensity builds drastically at the very end
-      glowOpacity = (fast_t > 0.7) ? (fast_t - 0.7) * 5 : 0;
-
-      // Let Earth grow slightly to simulate an intense zoom-in effect
-      targetEarthScale = 1.0 + (fast_t * 0.15); // Scales from 1.0 to 1.15
-      targetEarthX = 0;
-      targetEarthZ = 0;
-
-      // Pull Earth dramatically into the center of the viewport
-      targetEarthY = -1.7 + (fast_t * 1.7); // Rises to Y=0
-
-      // Zoom the camera significantly into Earth's atmosphere showing Orion entering
-      targetCamZ = baseCameraZ + 3.0 - (fast_t * 4.0); // Pushes from Z=6.5 down to Z=2.5
-      targetCamY = baseCameraY - (fast_t * 0.8);       // Centers camera Vertically on Earth
+      targetEarthScale = 1.0;
+      targetEarthY = -1.5 + (t * 0.5); // Center Earth more
     }
+    // Phase 3 (Post-Journey / Static Earth): 9.8 -> 14.8
+    else if (raw > 9.8) {
+      const t = Math.min((raw - 9.8) / 5, 1); // 0 -> 1
+      
+      slsVisible = false;
+      orionVisible = false; // Hide Orion after journey loop is done
+      targetMoonScale = 0.2; // Keep moon small in bg
+
+      targetEarthScale = 1.0;
+      targetEarthY = 0; // Centered
+      targetEarthX = 0;
+      
+      // We will handle blurring in SceneManager
+    }
+
+    if (slsGroup.current) slsGroup.current.visible = slsVisible;
+    if (orionGroup.current) orionGroup.current.visible = orionVisible;
+    if (moonRef.current) moonRef.current.visible = (raw > 6);
 
     // Apply values with smooth lerp
     if (slsGroup.current) {

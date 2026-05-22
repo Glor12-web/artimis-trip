@@ -1,16 +1,9 @@
-<<<<<<< HEAD
-import { useEffect, useRef } from 'react'
-import { Canvas } from '@react-three/fiber'
-import { SceneProvider, useScene } from '../context/SceneContext'
-import { HeroScene } from './HeroScene'
-import { CrewScene } from './CrewScene'
-=======
-import { useEffect } from "react";
-import { Canvas } from "@react-three/fiber";
+import { CrewScene } from "./CrewScene";
+import { useEffect, useRef } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
 import { SceneProvider, useScene } from "../context/SceneContext";
-import { HeroScene } from "./HeroScene";
+import { MainScene } from "./MainScene";
 import { JourneyScene } from "./JourneyScene";
->>>>>>> journey-timeline
 
 // Scroll tracker — updates scrollProgress ref without causing re-renders
 function ScrollTracker() {
@@ -18,18 +11,11 @@ function ScrollTracker() {
 
   useEffect(() => {
     const handleScroll = () => {
-<<<<<<< HEAD
-      // No cap — grows as user scrolls: 0, 1, 2, 3... one per section
-      const current = window.scrollY / window.innerHeight
-      scrollProgress.current = current
-    }
-=======
       // Normalize scroll: 0 at top, 1 at 100vh scrolled
       const maxScroll = window.innerHeight;
       const current = window.scrollY / maxScroll;
       scrollProgress.current = current;
     };
->>>>>>> journey-timeline
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
@@ -38,28 +24,48 @@ function ScrollTracker() {
   return null;
 }
 
-function CanvasContent() {
+function BlurController({ canvasContainerRef }) {
+  const { scrollProgress } = useScene();
+
+  useFrame(() => {
+    const t = scrollProgress.current;
+    if (canvasContainerRef.current) {
+      // Blur starts after Journey section (t > 9)
+      // Transition from 0 to 10px blur between t=9 and t=10
+      let blurAmount = 0;
+      if (t > 9) {
+        blurAmount = Math.min((t - 9) * 10, 12); // Max 12px blur
+      }
+      canvasContainerRef.current.style.filter = `blur(${blurAmount}px)`;
+    }
+  });
+
+  return null;
+}
+
+function CanvasContent({ canvasContainerRef }) {
   return (
     <>
       <ScrollTracker />
-      {/* HeroScene renders inside the global canvas */}
-      <HeroScene />
-<<<<<<< HEAD
+      <BlurController canvasContainerRef={canvasContainerRef} />
+      {/* MainScene renders inside the global canvas */}
+      <MainScene />
       {/* Future: <MissionScene />, <CrewScene />, etc. */}
       <CrewScene />
       {/* Future: <MissionScene />, <JourneyScene />, etc. */}
-=======
       <JourneyScene />
->>>>>>> journey-timeline
     </>
   );
 }
 
 export function SceneManager() {
+  const canvasContainerRef = useRef(null);
+
   return (
     <SceneProvider>
       {/* Fixed canvas — stays in place while DOM sections scroll over it */}
       <div
+        ref={canvasContainerRef}
         style={{
           position: "fixed",
           top: 0,
@@ -67,6 +73,7 @@ export function SceneManager() {
           width: "100vw",
           height: "100vh",
           zIndex: 0,
+          transition: "filter 0.3s ease-out", // Smooth transition
         }}
       >
         <Canvas
@@ -79,32 +86,10 @@ export function SceneManager() {
           }}
           style={{ background: "#000308" }}
         >
-          <CanvasContent />
+          <CanvasContent canvasContainerRef={canvasContainerRef} />
         </Canvas>
       </div>
-
-      {/* Scroll spacer — creates scroll distance for GSAP/scroll reactions */}
-<<<<<<< HEAD
-      {/* Each section adds height here, DOM overlays use position:sticky */}
-      {/*
-  SCROLL SPACER — increase this number to add more scroll room.
-  Each section = 150vh.
-  Section 1 Hero:            scrollProgress 0 → 1
-  Section 2 Mission:         scrollProgress 1 → 2
-  Section 3 Moon Encounter:  scrollProgress 2 → 3
-  Section 4 Return to Earth: scrollProgress 3 → 4
-*/}
-      <div style={{ height: '1050vh', position: 'relative', zIndex: 1, pointerEvents: 'none' }} />
-=======
-      <div
-        style={{
-          height: "600vh",
-          position: "relative",
-          zIndex: 1,
-          pointerEvents: "none",
-        }}
-      />
->>>>>>> journey-timeline
     </SceneProvider>
   );
 }
+
